@@ -1,0 +1,14 @@
+/.idea/
+*.iml
+/dependency-reduced-pom.xml
+/target
+.settings
+.project
+.classpath
+.factorypath
+
+# Custom dev configuration
+dev/
+src/main/resources/run-dev.yml
+/*.http
+http-client.env.json
