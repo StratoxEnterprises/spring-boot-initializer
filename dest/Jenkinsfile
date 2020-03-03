@@ -1,0 +1,7 @@
+@Library('jenkins-pipeline-java') _
+javaPipelineLibrary("java-app"){
+	dockerParams = [
+        APPLICATION_NAME : '${project.name}',
+        APPLICATION_VERSION : '${project.version}'
+    ]    
+}

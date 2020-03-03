@@ -1,0 +1,91 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: {{ template "storefront.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ template "storefront.name" . }}
+    chart: {{ template "storefront.chart" . }}
+    buildNumber: "{{ .Values.buildNumber }}"
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "storefront.name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      annotations:
+        fluentbit.io/parser: oxus-app-component-base64
+        prometheus.io/path: /actuator/prometheus
+        prometheus.io/port: "80"
+        prometheus.io/scrape: "{{ .Values.metricsPrometheusEnabled }}"
+      labels:
+        app: {{ template "storefront.name" . }}
+        release: {{ .Release.Name }}
+        version: {{ .Values.version }}
+    spec:
+      imagePullSecrets:
+        - name: docker-user-registry
+      volumes:
+        - name: application-yml
+          configMap:
+            name: {{ .Chart.Name }}
+            items:
+            - key: application.yml
+              path: application.yml
+        - name: logback-xml
+          configMap:
+            name: {{ .Chart.Name }}
+            items:
+            - key: logback.xml
+              path: logback.xml
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Chart.Version }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          volumeMounts:
+            - name: application-yml
+              mountPath: /application.yml
+              subPath: application.yml
+            - name: logback-xml
+              mountPath: /logback.xml
+              subPath: logback.xml
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+            initialDelaySeconds: 70
+            periodSeconds: 20
+            successThreshold: 1
+            timeoutSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 10
+            failureThreshold: 12
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+    {{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}
