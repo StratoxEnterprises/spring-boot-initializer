@@ -11,7 +11,9 @@ import java.util.List;
 
 public class Application {
     public static void main(String[] args) throws IOException {
-        
+
+        final var destination = Path.of("destination");
+
         final var groupId = "cz.tripsis";
         final var artifactId = "spring-boot-demo";
 
@@ -36,8 +38,10 @@ public class Application {
             ZipUtils.extractStream(resourceAsStream, tempDirectory);
             Templator.templateDirectory(context, tempDirectory, List.of());
 
-            FileUtils.copyDirectory(tempDirectory.toFile(), Path.of("destination").toFile());
+            FileUtils.copyDirectory(tempDirectory.toFile(), destination.toFile());
+        } finally {
+            FileUtils.deleteQuietly(tempDirectory.toFile());
         }
-        ;
+
     }
 }
