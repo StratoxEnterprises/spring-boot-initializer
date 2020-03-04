@@ -1,7 +1,5 @@
 package cz.stratox;
 
-import org.apache.commons.io.FileUtils;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -9,13 +7,23 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 
+import org.apache.commons.io.FileUtils;
+
 public class Application {
     public static void main(String[] args) throws IOException {
 
-        final var destination = Path.of("destination");
+    	if(args.length != 2) {
+    		System.out.println("example: java -jar spring-boot-initializer.jar spring-boot-demo cz.oxus.cvut");
+    		System.exit(1);
+    	}
+    	
+        final var destination = Path.of("destination").toFile();
+        if(destination.exists()) {
+        	FileUtils.deleteDirectory(destination);
+        }
 
-        final var groupId = "cz.tripsis";
-        final var artifactId = "spring-boot-demo";
+        final var groupId = args[1];
+        final var artifactId = args[0];
 
         final var domainName = "dev.nonprod.oxus.oxuscloud.com";
         final var gitlabRepositoryHost = "gitlab.control.oxus.oxuscloud.com";
@@ -38,7 +46,7 @@ public class Application {
             ZipUtils.extractStream(resourceAsStream, tempDirectory);
             Templator.templateDirectory(context, tempDirectory, List.of());
 
-            FileUtils.copyDirectory(tempDirectory.toFile(), destination.toFile());
+            FileUtils.copyDirectory(tempDirectory.toFile(), destination);
         } finally {
             FileUtils.deleteQuietly(tempDirectory.toFile());
         }
